@@ -19,17 +19,23 @@ const list = [
   },
 ];
 
-const App = () => (
-  <div>
-    <h1>My Hacker Stories</h1>
-    <label htmlFor="search">Search: </label>
-    <input id="search" type="text" />
+const App = () => {
+  const handleChange = (event) => {
+    console.log(event.target.value);
+  };
 
-    <hr />
+  return (
+    <div>
+      <h1>My Hacker Stories</h1>
+      <label htmlFor="search">Search: </label>
+      <input id="search" type="text" onChange={handleChange} />
 
-    <List />
-  </div>
-);
+      <hr />
+
+      <List />
+    </div>
+  );
+};
 
 const List = () => (
   <ul>
