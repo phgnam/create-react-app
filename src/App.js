@@ -57,9 +57,8 @@ const App = () => {
   );
 };
 
-const Search = ({search, onSearch}) => {
-  return (
-    <div>
+const Search = ({search, onSearch}) => (
+    <>
       <label htmlFor="search">Search: </label>
       <input
         id="search"
@@ -70,9 +69,8 @@ const Search = ({search, onSearch}) => {
       <p>
         Searching for <strong>{search}</strong>.
       </p>
-    </div>
+    </>
   );
-};
 
 const List = ({ list }) =>
   list.map(item => <Item key={item.objectID} item={item} />);
