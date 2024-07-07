@@ -11,7 +11,7 @@ const useSemiPersistentState = (key, initialState) => {
   }, [value, key]);
 
   return [value, setValue];
-}
+};
 
 const App = () => {
   const stories = [
@@ -33,10 +33,7 @@ const App = () => {
     },
   ];
 
-  const [searchTerm, setSearchTerm] = useSemiPersistentState(
-    "search",
-    "React"
-  );
+  const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
@@ -49,7 +46,14 @@ const App = () => {
   return (
     <div>
       <h1>My Hacker Stories</h1>
-      <Search onSearch={handleSearch} search={searchTerm} />
+
+      <InputWithLabel
+        id="search"
+        label="Search"
+        value={searchTerm}
+        onInputChange={handleSearch}
+        search={searchTerm}
+      />
       <hr />
 
       <List list={searchedStories} />
@@ -57,23 +61,18 @@ const App = () => {
   );
 };
 
-const Search = ({search, onSearch}) => (
-    <>
-      <label htmlFor="search">Search: </label>
-      <input
-        id="search"
-        type="text"
-        value={search}
-        onChange={onSearch}
-      />
-      <p>
-        Searching for <strong>{search}</strong>.
-      </p>
-    </>
-  );
+const InputWithLabel = ({ id, label, value, type = "text", onInputChange }) => (
+  <>
+    <label htmlFor={id}>{label}</label>
+    <input id={id} type={type} value={value} onChange={onInputChange} />
+    <p>
+      Searching for <strong>{value}</strong>.
+    </p>
+  </>
+);
 
 const List = ({ list }) =>
-  list.map(item => <Item key={item.objectID} item={item} />);
+  list.map((item) => <Item key={item.objectID} item={item} />);
 
 const Item = ({ item }) => (
   <div>
@@ -84,6 +83,6 @@ const Item = ({ item }) => (
     <span>{item.num_comments}</span>
     <span>{item.points}</span>
   </div>
-)
+);
 
 export default App;
