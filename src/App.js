@@ -3,22 +3,27 @@ import React from "react";
 
 const initialStories = [
   {
-    title: 'React',
-    url: 'https://reactjs.org/',
-    author: 'Jordan Walke',
+    title: "React",
+    url: "https://reactjs.org/",
+    author: "Jordan Walke",
     num_comments: 3,
     points: 4,
     objectID: 0,
   },
   {
-    title: 'Redux',
-    url: 'https://redux.js.org/',
-    author: 'Dan Abramov, Andrew Clark',
+    title: "Redux",
+    url: "https://redux.js.org/",
+    author: "Dan Abramov, Andrew Clark",
     num_comments: 2,
     points: 5,
     objectID: 1,
   },
 ];
+
+const getAsyncStories = () =>
+  new Promise((resolve) =>
+    setTimeout(() => resolve({ data: { stories: initialStories } }), 2000)
+  );
 
 const useSemiPersistentState = (key, initialState) => {
   const [value, setValue] = React.useState(
@@ -35,7 +40,13 @@ const useSemiPersistentState = (key, initialState) => {
 const App = () => {
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
 
-  const [stories, setStories] = React.useState(initialStories);
+  const [stories, setStories] = React.useState([]);
+
+  React.useEffect(() => {
+    getAsyncStories().then((result) => {
+      setStories(result.data.stories);
+    });
+  }, []);
 
   const handleRemoveStory = (item) => {
     const newStories = stories.filter(
@@ -72,7 +83,14 @@ const App = () => {
   );
 };
 
-const InputWithLabel = ({ id, value, type = "text", onInputChange, isFocused, children }) => {
+const InputWithLabel = ({
+  id,
+  value,
+  type = "text",
+  onInputChange,
+  isFocused,
+  children,
+}) => {
   const inputRef = React.useRef();
 
   React.useEffect(() => {
@@ -81,17 +99,26 @@ const InputWithLabel = ({ id, value, type = "text", onInputChange, isFocused, ch
     }
   }, [isFocused]);
   return (
-  <>
-    <label htmlFor={id}>{children}</label>
-    <input ref={inputRef} id={id} type={type} value={value} onChange={onInputChange} />
-    <p>
-      Searching for <strong>{value}</strong>.
-    </p>
-  </>
-)};
+    <>
+      <label htmlFor={id}>{children}</label>
+      <input
+        ref={inputRef}
+        id={id}
+        type={type}
+        value={value}
+        onChange={onInputChange}
+      />
+      <p>
+        Searching for <strong>{value}</strong>.
+      </p>
+    </>
+  );
+};
 
 const List = ({ list, onRemoveItem }) =>
-  list.map((item) => <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />);
+  list.map((item) => (
+    <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
+  ));
 
 const Item = ({ item, onRemoveItem }) => (
   <div>
