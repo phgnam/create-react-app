@@ -203,14 +203,20 @@ function getTheTruth() {
   }
 }
 const List = ({ list, onRemoveItem }) => {
-  const [sort, setSort] = React.useState("NONE");
+  const [sort, setSort] = React.useState({
+    sortKey: "NONE",
+    isRevert: false,
+  });
 
   const handleSort = (sortKey) => {
-    setSort(sortKey);
+    const isRevert = sort.sortKey === sortKey && !sort.isRevert;
+    setSort({ sortKey, isRevert });
   };
 
-  const sortFunction = SORT[sort];
-  const sortList = sortFunction(list);
+  const sortFunction = SORT[sort.sortKey];
+  const sortList = sort.isRevert
+    ? sortFunction(list).reverse()
+    : sortFunction(list);
 
   return (
     console.log(getTheTruth()) || (
