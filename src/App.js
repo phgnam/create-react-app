@@ -70,7 +70,26 @@ const getSumComments = (stories) => {
 };
 
 const extractSearchTerm = (url) => url.replace(API_ENDPOINT, "");
-const getLastSearches = (urls) => urls.slice(-5).map(extractSearchTerm);
+const getLastSearches = (urls) =>
+  urls
+    .reduce((result, url, index) => {
+      const searchTerm = extractSearchTerm(url);
+
+      if (index === 0) {
+        return result.concat(searchTerm);
+      }
+
+      const previousSearchTerm = result[result.length - 1];
+
+      if (searchTerm === previousSearchTerm) {
+        return result;
+      } else {
+        return result.concat(searchTerm);
+      }
+    }, [])
+    .slice(-6)
+    .slice(0, -1);
+
 const getUrl = (searchTerm) => `${API_ENDPOINT}${searchTerm}`;
 
 const App = () => {
@@ -122,13 +141,16 @@ const App = () => {
 
   const sumComments = React.useMemo(() => getSumComments(stories), [stories]);
 
-  const handleLastSearches = (url) => {
-    setUrls(urls.concat(getUrl(url)));
+  const handleLastSearch = (searchTerm) => {
+    setSearchTerm(searchTerm);
+
+    handleSearch(searchTerm);
   };
+
   const handleSearch = (searchTerm) => {
     const url = getUrl(searchTerm);
     setUrls(urls.concat(url));
-  }
+  };
 
   const lastSearches = getLastSearches(urls);
 
@@ -144,17 +166,10 @@ const App = () => {
         onSearchSubmit={handleSearchSubmit}
       />
 
-      {lastSearches.map((searchTerm, index) => {
-        return (
-          <button
-            key={searchTerm + index}
-            type="button"
-            onClick={() => handleLastSearches(searchTerm)}
-          >
-            {searchTerm}
-          </button>
-        );
-      })}
+      <LastSearches
+        lastSearches={lastSearches}
+        onLastSearch={handleLastSearch}
+      />
 
       {stories.isError && <p>Something went wrong ...</p>}
 
@@ -297,6 +312,20 @@ const Item = ({ item, onRemoveItem }) => (
       </button>
     </span>
   </div>
+);
+
+const LastSearches = ({ lastSearches, onLastSearch }) => (
+  <>
+    {lastSearches.map((searchTerm, index) => (
+      <button
+        key={searchTerm + index}
+        type="button"
+        onClick={() => onLastSearch(searchTerm)}
+      >
+        {searchTerm}
+      </button>
+    ))}
+  </>
 );
 
 export default App;
