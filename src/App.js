@@ -1,18 +1,32 @@
 import React from "react";
 import axios from "axios";
+import * as _ from "lodash";
 
 import "./App.css";
-import { ReactComponent as Check } from "./check.svg";
 
 const API_ENDPOINT = "https://hn.algolia.com/api/v1/search?query=";
 
+const SORT = {
+  NONE: (list) => list,
+  TITLE: (list) => _.sortBy(list, "title"),
+  AUTHOR: (list) => _.sortBy(list, "author"),
+  COMMENT: (list) => _.sortBy(list, "num_comments").reverse(),
+  POINT: (list) => _.sortBy(list, "points").reverse(),
+};
+
 const useSemiPersistentState = (key, initialState) => {
+  const isMounted = React.useRef(false);
+
   const [value, setValue] = React.useState(
     localStorage.getItem(key) || initialState
   );
 
   React.useEffect(() => {
-    localStorage.setItem(key, value);
+    if (!isMounted.current) {
+      isMounted.current = true;
+    } else {
+      localStorage.setItem(key, value);
+    }
   }, [value, key]);
 
   return [value, setValue];
@@ -51,9 +65,13 @@ const storiesReducer = (state, action) => {
   }
 };
 
+const getSumComments = (stories) => {
+  return stories.data.reduce((result, value) => result + value.num_comments, 0);
+};
+
 const App = () => {
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
-
+  console.log("B:App");
   const [url, setUrl] = React.useState(`${API_ENDPOINT}${searchTerm}`);
 
   const [stories, dispatchStories] = React.useReducer(storiesReducer, {
@@ -81,12 +99,12 @@ const App = () => {
     handleFetchStories();
   }, [handleFetchStories]);
 
-  const handleRemoveStory = (item) => {
+  const handleRemoveStory = React.useCallback((item) => {
     dispatchStories({
       type: "REMOVE_STORY",
       payload: item,
     });
-  };
+  }, []);
 
   const handleSearchInput = (event) => {
     setSearchTerm(event.target.value);
@@ -98,9 +116,13 @@ const App = () => {
     event.preventDefault();
   };
 
+  const sumComments = React.useMemo(() => getSumComments(stories), [stories]);
+
   return (
     <div className="container">
-      <h1 className="headline-primary">My Hacker Stories</h1>
+      <h1 className="headline-primary">
+        My Hacker Stories with {sumComments} comments.
+      </h1>
 
       <SearchForm
         searchTerm={searchTerm}
@@ -173,11 +195,57 @@ const InputWithLabel = ({
     </>
   );
 };
+function getTheTruth() {
+  if (console.log("B:List")) {
+    return true;
+  } else {
+    return false;
+  }
+}
+const List = ({ list, onRemoveItem }) => {
+  const [sort, setSort] = React.useState("NONE");
 
-const List = ({ list, onRemoveItem }) =>
-  list.map((item) => (
-    <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
-  ));
+  const handleSort = (sortKey) => {
+    setSort(sortKey);
+  };
+
+  const sortFunction = SORT[sort];
+  const sortList = sortFunction(list);
+
+  return (
+    console.log(getTheTruth()) || (
+      <div>
+        <div style={{ display: "flex" }}>
+          <span style={{ width: "40%" }}>
+            <button type="button" onClick={() => handleSort("TITLE")}>
+              Title
+            </button>
+          </span>
+          <span style={{ width: "30%" }}>
+            <button type="button" onClick={() => handleSort("AUTHOR")}>
+              Author
+            </button>
+          </span>
+          <span style={{ width: "10%" }}>
+            <button type="button" onClick={() => handleSort("COMMENT")}>
+              Comments
+            </button>
+          </span>
+          <span style={{ width: "10%" }}>
+            <button type="button" onClick={() => handleSort("POINT")}>
+              Points
+            </button>
+          </span>
+          <span style={{ width: "10%" }}>Actions</span>
+        </div>
+        {sortList.map((item) => (
+          <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
+        ))}
+        ;
+      </div>
+    )
+  );
+};
 
 const Item = ({ item, onRemoveItem }) => (
   <div className="item">
@@ -193,7 +261,7 @@ const Item = ({ item, onRemoveItem }) => (
         onClick={() => onRemoveItem(item)}
         className="button button_small"
       >
-        <Check height="18px" width="18px" />
+        Dismiss
       </button>
     </span>
   </div>
