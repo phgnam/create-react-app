@@ -69,10 +69,14 @@ const getSumComments = (stories) => {
   return stories.data.reduce((result, value) => result + value.num_comments, 0);
 };
 
+const extractSearchTerm = (url) => url.replace(API_ENDPOINT, "");
+const getLastSearches = (urls) => urls.slice(-5).map(extractSearchTerm);
+const getUrl = (searchTerm) => `${API_ENDPOINT}${searchTerm}`;
+
 const App = () => {
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
   console.log("B:App");
-  const [url, setUrl] = React.useState(`${API_ENDPOINT}${searchTerm}`);
+  const [urls, setUrls] = React.useState([getUrl(searchTerm)]);
 
   const [stories, dispatchStories] = React.useReducer(storiesReducer, {
     data: [],
@@ -84,7 +88,8 @@ const App = () => {
     dispatchStories({ type: "STORIES_FETCH_INIT" });
 
     try {
-      const result = await axios.get(url);
+      const lastUrl = urls[urls.length - 1];
+      const result = await axios.get(lastUrl);
 
       dispatchStories({
         type: "STORIES_FETCH_SUCCESS",
@@ -93,7 +98,7 @@ const App = () => {
     } catch {
       dispatchStories({ type: "STORIES_FETCH_FAILURE" });
     }
-  }, [url]);
+  }, [urls]);
 
   React.useEffect(() => {
     handleFetchStories();
@@ -111,12 +116,21 @@ const App = () => {
   };
 
   const handleSearchSubmit = (event) => {
-    setUrl(`${API_ENDPOINT}${searchTerm}`);
-
+    handleSearch(searchTerm);
     event.preventDefault();
   };
 
   const sumComments = React.useMemo(() => getSumComments(stories), [stories]);
+
+  const handleLastSearches = (url) => {
+    setUrls(urls.concat(getUrl(url)));
+  };
+  const handleSearch = (searchTerm) => {
+    const url = getUrl(searchTerm);
+    setUrls(urls.concat(url));
+  }
+
+  const lastSearches = getLastSearches(urls);
 
   return (
     <div className="container">
@@ -129,6 +143,18 @@ const App = () => {
         onSearchInput={handleSearchInput}
         onSearchSubmit={handleSearchSubmit}
       />
+
+      {lastSearches.map((searchTerm, index) => {
+        return (
+          <button
+            key={searchTerm + index}
+            type="button"
+            onClick={() => handleLastSearches(searchTerm)}
+          >
+            {searchTerm}
+          </button>
+        );
+      })}
 
       {stories.isError && <p>Something went wrong ...</p>}
 
